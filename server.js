@@ -6,6 +6,9 @@ const express = require('express')
 const app = express()
 const axios = require('axios');
 var nodemailer = require('nodemailer');
+var createMail = require('./createmail');
+var urlcrypt = require('url-crypt')('~{ry*I)44==yU/]9<7DPk!Hj"R#:-/Z7(hTBnlRS=4CXF');
+var rsa = require('node-rsa');
 let mail = process.env.EMAIL;
 let password = process.env.PASSWORD;
 const token = process.env.SECRET
@@ -17,6 +20,7 @@ const b17 = process.env.B17
 const b18 = process.env.B18
 const outs = process.env.OUTS
 
+const key = new rsa({b: 512});
 
 // we've started you off with Express, 
 // but feel free to use whatever libs or frameworks you'd like through `package.json`.
@@ -37,6 +41,64 @@ dict['2017'] = b17;
 dict['2018'] = b18;
 dict['outsider'] = outs;
 
+// Testing 
+
+app.get('/verify/:base64', (req, res, next) => {
+  const encryptedData = req.params.base64;
+  var data;
+  const pass = true;
+  try {
+    data = urlcrypt.decryptObj(encryptedData);
+  } catch (e) {
+    res.send("Invalid Link.");
+    pass = false;
+  } 
+
+  if ( pass ) {
+    res.redirect('https://github.com/orgs/iiitv/teams');
+  }
+  res.end();
+});
+
+
+app.get("/sendmail/:username/:id", (request, response, next) => {
+  const username = request.params.username;
+  const id = request.params.id;
+  const base64 = urlcrypt.cryptObj({
+    id: id,
+    username: username
+  });
+  
+  const verificationurl = 'http://localhost:3000/verify/' + base64;
+
+  var transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: mail,
+      pass: password,
+    }
+  });
+
+  var mailOptions = {
+    from: '"IIITV Coding Club" <codingclub@iiitv.ac.in>',
+    to: id,
+    //cc: mail,
+    subject: 'Invitation to join IIITV Organization on GitHub',
+    html: createMail.createMail(username, verificationurl),
+  };
+
+  transporter.sendMail(mailOptions, function(error, info){
+    if (error) {
+      console.log(error);
+      response.sendStatus(500);
+    } else {
+      response.sendStatus(200);
+    }
+  });
+
+  next();
+
+});
 
 app.get("/add", (request, response) => {
   let pref = request.query.email.substring(0, 4);
@@ -84,7 +146,13 @@ app.get("/add", (request, response) => {
   });
 })
 
+app.get('/verify/:hash', (request, response) => {
+  const hash = request.params.hash;
+  response.send(hash);
+  response.end();
+});
+
 // listen for requests :)
-const listener = app.listen(process.env.PORT, () => {
+const listener = app.listen( 3000 || process.env.PORT, () => {
   console.log(`Your app is listening on port ${listener.address().port}`)
 })

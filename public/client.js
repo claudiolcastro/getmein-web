@@ -63,11 +63,25 @@ $(function() {
     var username = $('#username').val()  
     var email = $('#email').val()
     console.log(username);
-    $.get('/add?' + $.param({username: username, email: email}), function() {
-      $('input').val('')
-      $('input').focus()
-      window.location.reload();
+    fetch('/sendmail/' + username + '/' + email)
+    .then((res) => {
+      if (res.status == 200) {
+        UIkit.notification({
+          message: '<span uk-icon=\'icon: thumbs-o-up\'></span> email and github username are required fields.',
+          status: 'success',
+          pos: 'top-center',
+          timeout: 2000
+        });
+      }
     })
+    .catch((e) => {
+      UIkit.notification({
+        message: '<span uk-icon=\'icon: warning\'></span> An error occured. Please try again later.',
+        status: 'danger',
+        pos: 'top-center',
+        timeout: 1000
+      });
+    });
   })
 
 })
