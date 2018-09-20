@@ -68,7 +68,10 @@ app.get("/sendmail/:username/:id", (request, response, next) => {
   const verificationurl = 'http://getmein.glitch.me/verify/' + base64;
 
   var transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    secure: true,
+    port: '465',
+    pool: true,
     auth: {
       user: mail,
       pass: password,
