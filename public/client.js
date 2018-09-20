@@ -63,11 +63,12 @@ $(function() {
     var username = $('#username').val()  
     var email = $('#email').val()
     console.log(username);
-    fetch('/sendmail/' + username + '/' + email)
+    fetch(`/sendmail/${username}/${email}`)
     .then((res) => {
+      console.log(res);
       if (res.status == 200) {
         UIkit.notification({
-          message: '<span uk-icon=\'icon: thumbs-o-up\'></span> email and github username are required fields.',
+          message: '<span uk-icon=\'icon: thumbs-up\'></span> A verification E-mail has been sent.',
           status: 'success',
           pos: 'top-center',
           timeout: 2000
